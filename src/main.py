@@ -2,9 +2,11 @@ import pyautogui as pag
 import time 
 
 filePath = r'D:/Project/CloverRelic/src/'
+global direction
+direction = 0
 
 
-def findImg(imgName, delayTime=0, count=10, intervalTime=1, validation=False, confidence=0.9, exit=True):
+def findImg(imgName, delayTime=0, count=40, intervalTime=0.5, validation=False, confidence=0.9, exit=True):
     ''' 查找某个图像在屏幕上的坐标
     
     :param imgName: 图像名
@@ -51,32 +53,41 @@ def battle():
     pag.leftClick(target)
 
 
-def doEvent():
-    p1 = findImg('elite', count=1, validation=True, exit=False)
-    if p1.x>=0:
-        print('精英战斗')
-        pag.leftClick(p1)
-        battle()
-        return
-    p2 = findImg('common', count=1, validation=True, exit=False)
-    if p2.x>=0:
-        print('普通战斗')
-        pag.leftClick(p2)
-        battle()
-        return
-    p3 = findImg('encounter', count=1, validation=True, exit=False)
-    if p3.x>=0:
-        print('事件')
-        pag.leftClick(p3)
-        pag.leftClick(findImg('select',2))
-        target = findImg('battle_flag',count=1, delayTime=1, exit=False)
-        if target.x>0:
+def doEvent(count=10):
+    time.sleep(1)
+    global direction
+    while count>0:
+        p1 = findImg('elite', count=1, validation=True, exit=False)
+        if p1.x>=0:
+            print('精英战斗')
+            pag.leftClick(p1)
             battle()
-        target = findImg('select', count=1, exit=False)
-        if target.x>0:
-            pag.leftClick(target)
-        return
-    # 查找失败，需要滑动
+            direction=0
+            return
+        p2 = findImg('common', count=1, validation=True, exit=False)
+        if p2.x>=0:
+            print('普通战斗')
+            pag.leftClick(p2)
+            battle()
+            direction=0
+            return
+        p3 = findImg('encounter', count=1, validation=True, exit=False)
+        if p3.x>=0:
+            print('事件')
+            pag.leftClick(p3)
+            pag.leftClick(findImg('select',2))
+            target = findImg('battle_flag',count=1, delayTime=3, exit=False)
+            if target.x>0:
+                battle()
+            target = findImg('select', count=1, delayTime=2, exit=False)
+            if target.x>0:
+                pag.leftClick(target)
+            target = findImg('exit', count=1, delayTime=1, exit=False)
+            if target.x>0:
+                pag.leftClick(target)
+            direction=0
+            return
+        drag()
     pag.alert(text='未找到目标，程序已停止运行', title='警告')
     exit()
 
@@ -96,13 +107,23 @@ def end():
     pag.leftClick(findImg('exit'))
 
 
-def doBoss(i):
+def doBoss(i,count=10):
+    time.sleep(1)
     print('第'+str(i)+'天王')
-    target = findImg('enemy', validation=True, exit=False)
+    global direction
+    while count>0:
+        target = findImg('enemy', count=1, validation=True, exit=False)
+        if target.x>=0:
+            direction=0
+            break
+        else:
+            drag()
+            count=count-1
     if target.x>=0:
         pag.leftClick(target)
     else:
-        pag.alert(text='查找失败，已退出程序', title='警告')  # 查找失败，需要滑动
+        pag.alert(text='找不到目标，已退出程序', title='警告')
+        exit()
     pag.leftClick(findImg('select'))
     battle()
     pag.leftClick(findImg('select'))
@@ -111,12 +132,40 @@ def doBoss(i):
         pag.leftClick(findImg('select'))
 
 
+def drag():
+    global direction
+    target=findImg('end')
+    leftPoint = pag.Point(target.x-1260+400, target.y-466+680)
+    rightPoint = pag.Point(target.x-1260+860, target.y-466+900)
+    if direction == 0:
+        screenshot = pag.screenshot()
+        leftPixel = screenshot.getpixel(leftPoint)
+        rightPixel = screenshot.getpixel(rightPoint)
+        if leftPixel[0]>rightPixel[0]:
+            direction=1
+        else:
+            direction=2
+    if direction==1 :
+        pag.moveTo(leftPoint)
+        pag.mouseDown()
+        pag.moveTo(leftPoint.x+500, leftPoint.y+250, duration=0.5)
+        pag.mouseUp()
+    else:
+        pag.moveTo(rightPoint)
+        pag.mouseDown()
+        pag.moveTo(rightPoint.x-500, rightPoint.y-250, duration=0.5)
+        pag.mouseUp()
 
-print('=================================================')
-begin()
-time.sleep(1)
-for i in range(1,5):
-    doBoss(i)
-    doEvent()
-doBoss()
-end()
+
+cnt = 1
+while True:
+    time.sleep(5)
+    print('==='+str(cnt)+'===')
+    begin()
+    time.sleep(1)
+    for i in range(1,5):
+        doBoss(i)
+        doEvent()
+    doBoss(5)
+    end()
+    cnt = cnt + 1
