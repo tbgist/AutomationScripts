@@ -1,9 +1,15 @@
 import pyautogui as pag
 import time 
+import json
+import os
 
-filePath = r'D:/Project/CloverRelic/src/'
+filePath = os.path.dirname(__file__)
 global direction
 direction = 0
+with open(filePath+'\\config.json','r',encoding='utf8')as fp:
+    json_data = json.load(fp)
+R = int(json_data['R'])
+times = int(json_data['times'])
 
 
 def findImg(imgName, delayTime=0, count=40, intervalTime=0.5, validation=False, confidence=0.9, exit=True):
@@ -20,14 +26,14 @@ def findImg(imgName, delayTime=0, count=40, intervalTime=0.5, validation=False, 
     target = pag.Point(-1, -1)
     while count>0 and target.x<0:
         try:
-            imgs = pag.locateAllOnScreen(filePath+imgName+'.png', confidence=confidence)
+            imgs = pag.locateAllOnScreen(filePath+'\\'+imgName+'.png', confidence=confidence)
             imgs = list(imgs)
             if validation is True:
                 screenshot = pag.screenshot()
                 for img in imgs:
                     point = pag.center(img)
                     pixel = screenshot.getpixel(point)
-                    if pixel[0]>180:
+                    if pixel[0]>R:
                         target = point
                         break
             else:
@@ -158,7 +164,7 @@ def drag():
 
 
 cnt = 1
-while True:
+for i in range(1, times+1):
     time.sleep(5)
     print('==='+str(cnt)+'===')
     begin()
