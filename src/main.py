@@ -103,7 +103,7 @@ def begin():
     pag.leftClick(findImg('start', delayTime=1))
     pag.leftClick(findImg('start_play', delayTime=3))
     pag.leftClick(findImg('OK'))
-    pag.leftClick(findImg('skip'))
+    pag.leftClick(findImg('skip', delayTime=2))
 
 
 def end():
